@@ -3,5 +3,5 @@
 # branch build succeeds and ENVIRONMENT=dev.
 
 image:
-  tag: "a40948f7-19"
+  tag: "d3e337fe-25"
 replicaCount: 1
