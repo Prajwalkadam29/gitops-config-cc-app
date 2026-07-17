@@ -20,7 +20,6 @@ spec:
       # POD SECURITY CONTEXT (Kyverno Compliance)
       # ---------------------------------------------------------
       securityContext:
-        runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
 
