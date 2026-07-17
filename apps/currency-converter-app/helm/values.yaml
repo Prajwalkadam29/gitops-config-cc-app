@@ -4,7 +4,7 @@
 
 image:
   repository: 056926201860.dkr.ecr.ap-south-1.amazonaws.com/currency-converter-app
-  tag: "latest"
+  tag: d3e337fe-27
   pullPolicy: IfNotPresent
 
 replicaCount: 2
