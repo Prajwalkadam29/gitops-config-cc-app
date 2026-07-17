@@ -1,0 +1,5 @@
+# Default rule: anyone can review standard changes
+* @your-org/platform-team
+
+# Strict rule: Only release approvers can merge changes to production values
+/apps/*/values-prod.yaml @your-org/release-approvers

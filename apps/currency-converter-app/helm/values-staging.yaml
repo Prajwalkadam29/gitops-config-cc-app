@@ -1,0 +1,6 @@
+# values-staging.yaml
+# Updated by Jenkins only when this pipeline is re-run with ENVIRONMENT=staging.
+
+image:
+  tag: "REPLACED_BY_CI"
+replicaCount: 2

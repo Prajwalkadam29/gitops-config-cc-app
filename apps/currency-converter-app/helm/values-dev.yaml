@@ -1,0 +1,7 @@
+# values-dev.yaml
+# The ONLY file Jenkins writes to (just the image.tag line) when a `main`
+# branch build succeeds and ENVIRONMENT=dev.
+
+image:
+  tag: "REPLACED_BY_CI"
+replicaCount: 1

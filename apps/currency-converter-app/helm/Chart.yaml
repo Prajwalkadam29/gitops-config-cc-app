@@ -1,0 +1,6 @@
+apiVersion: v2
+name: currency-converter
+description: Helm chart for the currency-converter app. Lives here in gitops-config.
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

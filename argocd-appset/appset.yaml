@@ -1,0 +1,75 @@
+# argocd-appset/appset.yaml
+#
+# One ApplicationSet drives every app, in every environment, on every
+# cluster. This is what makes the GitOps side "scalable and adaptable":
+#
+#   - New application  -> add a directory under apps/<name>/ in this repo.
+#     No Argo CD object needs to be hand-created; the git generator below
+#     picks it up on its next poll (default 3min, or instantly via webhook).
+#   - New environment/cluster -> register the cluster with Argo CD
+#     (`argocd cluster add`, or a Cluster secret) labeled with `env: <name>`,
+#     and add a values-<env>.yaml under the app's directory. The cluster
+#     generator picks it up automatically.
+#
+# Combines two generators via `matrix`: every app x every registered
+# cluster/environment.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/your-org/gitops-config.git
+              revision: main
+              directories:
+                - path: "apps/*"
+          - clusters:
+              selector:
+                matchLabels:
+                  argocd.argoproj.io/managed: "true"
+              values:
+                env: "{{index .metadata.labels \"env\"}}"
+
+  template:
+    metadata:
+      # e.g. "java-spring-boot-app-prod"
+      name: "{{.path.basename}}-{{.values.env}}"
+      labels:
+        app: "{{.path.basename}}"
+        env: "{{.values.env}}"
+    spec:
+      project: default
+      # Single source: chart + templates + per-env values file all live
+      # together in gitops-config, under apps/<app>/helm/. Nothing is read
+      # from the application's own source repo - Jenkins never touches
+      # anything Kubernetes-related, and this repo is a complete,
+      # self-contained description of what's running.
+      source:
+        repoURL: https://github.com/your-org/gitops-config.git
+        targetRevision: main
+        path: "apps/{{.path.basename}}/helm"
+        helm:
+          valueFiles:
+            - "values-{{.values.env}}.yaml"
+      destination:
+        name: "{{.name}}"   # resolved from the registered cluster, matches the `clusters` generator entry
+        namespace: "{{.path.basename}}-{{.values.env}}"
+      syncPolicy:
+        automated:
+          prune: true      # remove resources deleted from Git
+          selfHeal: true   # revert manual kubectl edits back to Git state - this IS the drift protection
+        syncOptions:
+          - CreateNamespace=true
+          - ServerSideApply=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m

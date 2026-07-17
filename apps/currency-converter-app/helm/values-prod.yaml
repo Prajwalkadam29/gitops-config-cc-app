@@ -1,0 +1,7 @@
+# values-prod.yaml
+# Updated only via a Pull Request (see gitops-config/CODEOWNERS) - Jenkins
+# opens the PR, a human with release-approvers rights has to merge it.
+
+image:
+  tag: "REPLACED_BY_CI"
+replicaCount: 3
