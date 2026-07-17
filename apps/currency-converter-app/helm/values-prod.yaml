@@ -5,3 +5,7 @@
 image:
   tag: "REPLACED_BY_CI"
 replicaCount: 3
+
+externalSecrets:
+  awsSecretName: "prod/currency-converter/api-keys"
+  awsSecretProperty: "exchange_rate_api_key"

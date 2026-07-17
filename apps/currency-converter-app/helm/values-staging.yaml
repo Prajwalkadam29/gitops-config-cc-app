@@ -4,3 +4,7 @@
 image:
   tag: "d3e337fe-27"
 replicaCount: 2
+
+externalSecrets:
+  awsSecretName: "staging/currency-converter/api-keys"
+  awsSecretProperty: "exchange_rate_api_key"

@@ -5,27 +5,38 @@ metadata:
   namespace: argocd
 spec:
   generators:
-    - git:
-        repoURL: https://github.com/Prajwalkadam29/gitops-config-cc-app.git
-        revision: main
-        directories:
-          - path: apps/*
+    - matrix:
+        generators:
+          - git:
+              repoURL: https://github.com/Prajwalkadam29/gitops-config-cc-app.git
+              revision: main
+              directories:
+                - path: apps/*
+          - list:
+              elements:
+                - env: dev
+                - env: staging
+                - env: prod
   template:
     metadata:
-      name: '{{.path.basename}}-dev'
+      # Removed leading dots
+      name: '{{path.basename}}-{{env}}'
     spec:
       project: default
       source:
         repoURL: https://github.com/Prajwalkadam29/gitops-config-cc-app.git
         targetRevision: main
-        path: '{{.path.path}}/helm'
+        # Removed leading dots
+        path: '{{path}}/helm'
         helm:
           valueFiles:
             - values.yaml
-            - values-dev.yaml
+            # Removed leading dot
+            - 'values-{{env}}.yaml'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{.path.basename}}-dev'
+        # Removed leading dots
+        namespace: '{{path.basename}}-{{env}}'
       syncPolicy:
         automated:
           prune: true
