@@ -3,5 +3,5 @@
 # branch build succeeds and ENVIRONMENT=dev.
 
 image:
-  tag: "REPLACED_BY_CI"
+  tag: "a40948f7-19"
 replicaCount: 1
