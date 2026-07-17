@@ -25,7 +25,7 @@ spec:
     - matrix:
         generators:
           - git:
-              repoURL: https://github.com/your-org/gitops-config.git
+              repoURL: https://github.com/Prajwalkadam29/gitops-config-cc-app.git
               revision: main
               directories:
                 - path: "apps/*"
@@ -51,7 +51,7 @@ spec:
       # anything Kubernetes-related, and this repo is a complete,
       # self-contained description of what's running.
       source:
-        repoURL: https://github.com/your-org/gitops-config.git
+        repoURL: https://github.com/Prajwalkadam29/gitops-config-cc-app.git
         targetRevision: main
         path: "apps/{{.path.basename}}/helm"
         helm:
