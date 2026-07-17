@@ -2,5 +2,5 @@
 # Updated by Jenkins only when this pipeline is re-run with ENVIRONMENT=staging.
 
 image:
-  tag: "a40948f7-23"
+  tag: "d3e337fe-27"
 replicaCount: 2
