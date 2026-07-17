@@ -3,8 +3,8 @@
 # will happen in values-<env>.yaml
 
 image:
-  repository: "REPLACE_WITH_ECR_REPO_URI"
-  tag: "REPLACE_BY_CI"
+  repository: 056926201860.dkr.ecr.ap-south-1.amazonaws.com/currency-converter-app
+  tag: "latest"
   pullPolicy: IfNotPresent
 
 replicaCount: 2
