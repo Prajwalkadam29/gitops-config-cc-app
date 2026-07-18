@@ -46,19 +46,41 @@ ArgoCD relies on a strict directory structure to map Git paths to Kubernetes nam
 
 ### Manifest Deep-Dive
 
-* `appset.yaml`: The brain of the ArgoCD deployment. It uses a Matrix Generator combining the Git path (apps/*) with a list of environments (dev, staging, prod) to dynamically spawn isolated namespaces (e.g., currency-converter-app-dev) and deploy the Helm charts without duplicating YAML files.
+* `appset.yaml`: The brain of the ArgoCD deployment. It uses a Matrix Generator combining the Git path (`apps/*`) with a list of environments (`dev`, `staging`, `prod`) to dynamically spawn isolated namespaces (e.g., `currency-converter-app-dev`) and deploy the Helm charts without duplicating YAML files.
 
-* `deployment.yaml`: Configured for strict Pod Security Standards. It enforces a readOnlyRootFilesystem and drops all Linux capabilities. Because Spring Boot requires a writable /tmp to start Tomcat, a temporary emptyDir volume is mounted to satisfy the application without compromising the root filesystem security.
+* `Chart.yaml`: Defines the Helm chart metadata, including the chart name, description, and versioning.
+
+* `values.yaml`: Contains the safe, base defaults shared across all environments, such as the base ECR repository URI, default resource limits, and health probe paths.
+
+* `values-<env>.yaml`: Contains environment-specific overrides. This includes targeted replica counts, the exact AWS Secret path for that environment, and crucially, the dynamically updated `image.tag` written by the Jenkins CI pipeline.
+
+* `deployment.yaml`: Configured for strict Pod Security Standards. It enforces a `readOnlyRootFilesystem` and drops all Linux capabilities. Because Spring Boot requires a writable `/tmp` to start Tomcat, a temporary `emptyDir` volume is mounted to satisfy the application without compromising the root filesystem security.
+
+* `service.yaml`: Defines the Kubernetes Service, providing internal `ClusterIP` routing to expose the application pods to other resources within the cluster.
+
+* `hpa.yaml`: Implements a HorizontalPodAutoscaler, automatically scaling the number of application replicas up or down based on a target CPU utilization of 70%.
 
 * `externalsecret.yaml`: Implements the External Secrets Operator (ESO) CRD. It bridges the gap between AWS Secrets Manager and Kubernetes native Secrets securely at runtime.
 
 * `networkpolicy.yaml`: Enforces a Zero-Trust network boundary inside the cluster, ensuring the application only accepts traffic from the NGINX Ingress Controller and Prometheus metrics scrapers.
 
+* `CODEOWNERS`: Enforces branch protection rules by requiring designated platform/SRE team members to review and approve any Jenkins-generated Pull Requests before production deployment.
+
 ---
 
 ## The CI/CD Handoff Flow
 
-When a developer merges application code to `main`:
+Our pipeline utilizes a Jenkins Multibranch configuration to handle branches differently based on their purpose:
+
+### 1. Feature Branch Flow (Continuous Integration)
+When a developer pushes code to a `feature/*` branch, Jenkins provides rapid feedback without altering the cluster or GitOps repository:
+
+* **Jenkins CI:** Compiles code -> Scans Secrets -> Runs SAST (SonarQube) -> Builds Docker Image -> Scans Image (Trivy).
+* **Result:** The pipeline stops here. No artifacts are pushed to ECR, and the GitOps configuration remains untouched.
+
+
+### 2. Main Branch Flow (Continuous Delivery)
+When a developer merges application code to the `main` branch, the full release process is triggered:
 
 **1. Jenkins CI:** Compiles code -> Scans Secrets -> Runs SAST (SonarQube) -> Builds Docker Image -> Scans Image (Trivy) -> Pushes to ECR -> **Cryptographically Signs the Image (Cosign)**.
 
@@ -66,7 +88,7 @@ When a developer merges application code to `main`:
 
 * **Dev/Staging:** Jenkins commits directly to the main branch.
 
-* **Production:** Jenkins creates a Pull Request. Branch protection rules and the CODEOWNERS file enforce that an SRE/Lead must review and merge the PR.
+* **Production:** Jenkins creates a Pull Request. Branch protection rules and the `CODEOWNERS` file enforce that an SRE/Lead must review and merge the PR.
 
 **3. ArgoCD CD:** Detects the commit to `main`, renders the Helm template, and synchronizes the cluster state.
 
