@@ -134,6 +134,35 @@ The ECR repository currently allows mutable image tags to support rapid CI overw
 
 ---
 
+## 🐙 GitOps Deployment Visualizations (ArgoCD)
+
+The following dashboard captures demonstrate our ArgoCD controller successfully mapping our repository configurations to live cluster resources across all three isolated environments.
+
+### 1. Matrix ApplicationSet Overview
+This multi-tile view confirms that ArgoCD’s ApplicationSet successfully detected the apps/ directory and automatically spawned isolated applications for dev, staging, and prod targets.
+
+![ArgoCD Applications Overview](assets/gitops_img1.png)
+
+
+### 2. Development Environment (Healthy Sync)
+Visualizes the complete Kubernetes resource tree for the Dev environment. ArgoCD has synchronized the Deployment, associated ReplicaSets, horizontal scalers (HPA), Service, and Zero-Trust NetworkPolicies.
+
+![Dev Environment Tree](assets/gitops_img2.png)
+
+
+### 3. Staging Environment (Healthy Sync)
+Demonstrates the identically configured Staging environment running smoothly with active pods.
+
+![Staging Environment Tree](assets/gitops_img3.png)
+
+
+### 4. Production Environment (Degraded State Detection)
+Highlights ArgoCD's robust cluster observability. Here, the production deployment is actively blocked and flagged as "Degraded" (showing an ImagePullBackOff), demonstrating how GitOps prevents broken states or unauthorized images (such as those lacking a valid Cosign signature via Kyverno) from silently impacting production availability.
+
+![Prod Environment Tree](assets/gitops_img4.png)
+
+---
+
 ## Quick Troubleshooting
 
 1. **ArgoCD reports "app path does not exist"**
@@ -142,10 +171,12 @@ The ECR repository currently allows mutable image tags to support rapid CI overw
 2. **Pods are failing to start with Secret missing errors**
    Verify that the IAM Role associated with the `external-secrets-sa` ServiceAccount has `secretsmanager:GetSecretValue` permissions for the exact AWS Secret ARN defined in your `values-<env>.yaml`. 
 
-    Check the operator status:
-    ```bash
-    kubectl describe externalsecret currency-converter-api-secret -n currency-converter-app-dev
-    ```   
+
+Check the operator status:
+
+   ```bash
+       kubectl describe externalsecret currency-converter-api-secret -n currency-converter-app-dev
+   ```   
 
 3. **Pods stuck in CreateContainerConfigError**
    This usually indicates a volume mount failure or a security context clash. Verify that the `emptyDir` mount for `/tmp` is correctly mapped in both `volumeMounts` and `volumes` in `deployment.yaml`.
